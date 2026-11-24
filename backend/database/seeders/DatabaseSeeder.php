@@ -22,6 +22,6 @@ class DatabaseSeeder extends Seeder
             'password' => 'password',
         ]);
 
-        Task::factory(5)->for($user)->create();
+        Task::factory(25)->for($user)->create();
     }
 }

@@ -1,27 +1,43 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useCallback, useEffect, useState, type FormEvent } from 'react'
+import { Table, type ColumnType } from '../components/Table'
 import { getErrorMessage, performRequest } from '../lib/api'
 import type { Paginated, Task } from '../types'
 
 export function TasksPage() {
   const [tasks, setTasks] = useState<Task[]>([])
+  const [meta, setMeta] = useState({ current_page: 1, per_page: 15, total: 0 })
   const [title, setTitle] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  const loadTasks = useCallback(
+    (page: number) =>
+      performRequest<Paginated<Task>>('get', '/tasks', { page })
+        .then((res) => {
+          setTasks(res.data)
+          setMeta(res.meta)
+        })
+        .catch((err) => setError(getErrorMessage(err)))
+        .finally(() => setLoading(false)),
+    [],
+  )
+
   useEffect(() => {
-    performRequest<Paginated<Task>>('get', '/tasks')
-      .then(({ data }) => setTasks(data))
-      .catch((err) => setError(getErrorMessage(err)))
-      .finally(() => setLoading(false))
-  }, [])
+    loadTasks(1)
+  }, [loadTasks])
+
+  const fetchTasks = (page: number) => {
+    setLoading(true)
+    loadTasks(page)
+  }
 
   const addTask = async (e: FormEvent) => {
     e.preventDefault()
     if (!title.trim()) return
     try {
-      const { data } = await performRequest<{ data: Task }>('post', '/tasks', { title })
-      setTasks((prev) => [data, ...prev])
+      await performRequest('post', '/tasks', { title })
       setTitle('')
+      fetchTasks(1)
     } catch (err) {
       setError(getErrorMessage(err))
     }
@@ -41,11 +57,53 @@ export function TasksPage() {
   const deleteTask = async (task: Task) => {
     try {
       await performRequest('delete', `/tasks/${task.id}`)
-      setTasks((prev) => prev.filter((t) => t.id !== task.id))
+      const isLastOnPage = tasks.length === 1 && meta.current_page > 1
+      fetchTasks(isLastOnPage ? meta.current_page - 1 : meta.current_page)
     } catch (err) {
       setError(getErrorMessage(err))
     }
   }
+
+  const columns: ColumnType<Task>[] = [
+    {
+      title: 'Done',
+      dataIndex: 'completed',
+      width: 70,
+      align: 'center',
+      render: (_, task) => (
+        <input
+          type="checkbox"
+          checked={task.completed}
+          onChange={() => toggleTask(task)}
+          className="h-4 w-4"
+        />
+      ),
+    },
+    {
+      title: 'Title',
+      dataIndex: 'title',
+      sorter: true,
+      render: (value: string, task) => (
+        <span className={task.completed ? 'text-gray-400 line-through' : ''}>{value}</span>
+      ),
+    },
+    {
+      title: 'Created',
+      dataIndex: 'created_at',
+      sorter: true,
+      render: (value: string) => new Date(value).toLocaleDateString(),
+    },
+    {
+      title: 'Actions',
+      key: 'actions',
+      align: 'right',
+      render: (_, task) => (
+        <button onClick={() => deleteTask(task)} className="text-red-600 hover:underline">
+          Delete
+        </button>
+      ),
+    },
+  ]
 
   return (
     <div>
@@ -65,36 +123,19 @@ export function TasksPage() {
 
       {error && <p className="mb-4 rounded-md bg-red-50 p-2 text-sm text-red-700">{error}</p>}
 
-      {loading ? (
-        <p className="text-gray-500">Loading...</p>
-      ) : tasks.length === 0 ? (
-        <p className="text-gray-500">No tasks yet.</p>
-      ) : (
-        <ul className="space-y-3">
-          {tasks.map((task) => (
-            <li
-              key={task.id}
-              className="flex items-center gap-3 rounded-lg bg-white px-4 py-3 shadow-md transition-shadow hover:shadow-lg"
-            >
-              <input
-                type="checkbox"
-                checked={task.completed}
-                onChange={() => toggleTask(task)}
-                className="h-4 w-4"
-              />
-              <span className={`flex-1 ${task.completed ? 'text-gray-400 line-through' : ''}`}>
-                {task.title}
-              </span>
-              <button
-                onClick={() => deleteTask(task)}
-                className="text-sm text-red-600 hover:underline"
-              >
-                Delete
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
+      <Table
+        columns={columns}
+        dataSource={tasks}
+        rowKey="id"
+        loading={loading}
+        emptyText="No tasks yet."
+        pagination={{
+          current: meta.current_page,
+          pageSize: meta.per_page,
+          total: meta.total,
+          onChange: (page) => fetchTasks(page),
+        }}
+      />
     </div>
   )
 }

@@ -66,6 +66,34 @@ await performRequest('delete', `/tasks/${id}`)
 
 Errors are thrown; show them with `getErrorMessage(err)` (it returns the first Laravel validation message).
 
+## Table component
+
+`src/components/Table.tsx` is an antd-style table (no antd dependency):
+
+```tsx
+import { Table, type ColumnType } from '../components/Table'
+
+const columns: ColumnType<User>[] = [
+  { title: 'Name', dataIndex: 'name', sorter: true },
+  { title: 'Company', dataIndex: 'company.name' },                  // nested paths work
+  { title: 'Age', dataIndex: 'age', align: 'right', sorter: (a, b) => a.age - b.age },
+  { title: 'Actions', key: 'actions', render: (_, record) => <button>Edit {record.name}</button> },
+]
+
+// Client-side pagination (default 10 per page):
+<Table columns={columns} dataSource={users} rowKey="id" />
+
+// Server-side pagination with a Laravel paginated response:
+<Table
+  columns={columns}
+  dataSource={res.data}
+  loading={loading}
+  pagination={{ current: res.meta.current_page, pageSize: res.meta.per_page, total: res.meta.total, onChange: (page) => load(page) }}
+/>
+```
+
+Other props: `pagination={false}`, `emptyText`, `title={() => 'Users'}`, `onRow={(record) => ({ onClick: () => ... })}`, and `rowKey` as a function. `sorter` sorts the rows currently loaded in the browser.
+
 ## Adding a new resource (e.g. `Product`)
 
 Backend:
