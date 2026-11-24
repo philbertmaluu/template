@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
-use App\Http\Resources\UserResource;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -20,7 +19,7 @@ class AuthController extends Controller
         $user = User::create($request->validated());
 
         return response()->json([
-            'user' => new UserResource($user),
+            'user' => $user,
             'token' => $user->createToken('api')->plainTextToken,
         ], Response::HTTP_CREATED);
     }
@@ -36,14 +35,14 @@ class AuthController extends Controller
         }
 
         return response()->json([
-            'user' => new UserResource($user),
+            'user' => $user,
             'token' => $user->createToken('api')->plainTextToken,
         ]);
     }
 
-    public function me(Request $request): UserResource
+    public function me(Request $request): User
     {
-        return new UserResource($request->user());
+        return $request->user();
     }
 
     public function logout(Request $request): Response

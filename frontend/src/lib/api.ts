@@ -41,7 +41,7 @@ export type HttpMethod = 'get' | 'post' | 'put' | 'patch' | 'delete'
  * For "get" and "delete" the payload is sent as query params; otherwise as the request body.
  *
  *   const tasks = await performRequest<Paginated<Task>>('get', '/tasks', { page: 2 })
- *   const { data } = await performRequest<{ data: Task }>('post', '/tasks', { title })
+ *   const task = await performRequest<Task>('post', '/tasks', { title })
  */
 export async function performRequest<T = unknown>(
   method: HttpMethod,

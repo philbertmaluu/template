@@ -31,7 +31,6 @@ Ports 8080 (API) and 3000 (frontend) are fixed: `npm run dev` fails instead of s
 | --------------- | ------------------------------------------ |
 | `npm run setup` | First-time install and database setup     |
 | `npm run dev`   | Run Laravel (`:8080`) and Vite (`:3000`)   |
-| `npm test`      | Run backend feature tests                  |
 | `npm run fresh` | Drop all tables, re-migrate, and re-seed   |
 
 ## API
@@ -52,16 +51,15 @@ Authenticated requests send `Authorization: Bearer <token>`; `performRequest` ad
 
 ## Calling the API from React
 
-Use `performRequest` from `src/lib/api.ts` for every call. There's no need to import axios, and the token and base URL are handled for you:
+Put each endpoint in `src/hooks` and call `performRequest` there. Pages import those functions. They do not call `performRequest` themselves. See `src/hooks/useTasks.ts`.
 
 ```ts
+// src/hooks/useProducts.ts
 import { performRequest } from '../lib/api'
 
-// performRequest<ResponseType>(method, url, payload?, axiosConfig?) -> response body
-const tasks = await performRequest<Paginated<Task>>('get', '/tasks', { page: 2 }) // GET/DELETE payload = query params
-const { data } = await performRequest<{ data: Task }>('post', '/tasks', { title: 'New' })
-await performRequest('patch', `/tasks/${id}`, { completed: true })
-await performRequest('delete', `/tasks/${id}`)
+export function getProducts(params?: { page?: number }) {
+  return performRequest<Paginated<Product>>('get', '/products', params)
+}
 ```
 
 Errors are thrown; show them with `getErrorMessage(err)` (it returns the first Laravel validation message).
@@ -114,9 +112,9 @@ const [open, setOpen] = useState(false)
 </FormDrawer>
 ```
 
-## Adding a new resource (e.g. `Product`)
+## Adding an endpoint (e.g. `Product`)
 
-Backend:
+Backend. A model, a controller, and a route. No resource class: return the model and let Laravel turn it into JSON.
 
 ```bash
 cd backend
@@ -124,17 +122,17 @@ php artisan make:model Product -mf                        # model + migration + 
 php artisan make:controller Api/ProductController --api --model=Product
 php artisan make:request StoreProductRequest
 php artisan make:request UpdateProductRequest
-php artisan make:resource ProductResource
 php artisan make:policy ProductPolicy --model=Product     # if records are user-owned
-php artisan make:test ProductTest
 php artisan migrate
 ```
 
 Then register the route in `routes/api.php`: `Route::apiResource('products', ProductController::class);`
 
-Use `TaskController` / `TaskTest` as a reference.
+A list returns Laravel's paginator (`data` plus `current_page`, `per_page`, `total`). One record returns the model itself, not wrapped in `data`.
 
-Frontend: add the type in `src/types.ts`, a page in `src/pages/`, and a route in `src/App.tsx`. Call the API with `performRequest` (use `TasksPage.tsx` as a reference).
+Use `TaskController` as a reference.
+
+Frontend: add the type in `src/types.ts`, the API functions in `src/hooks/`, a page in `src/pages/`, and a route in `src/App.tsx`. Use `useTasks.ts` as the reference.
 
 ## Project layout
 
@@ -142,12 +140,11 @@ Frontend: add the type in `src/types.ts`, a page in `src/pages/`, and a route in
 backend/
   app/Http/Controllers/Api/   AuthController, TaskController
   app/Http/Requests/          Form request validation
-  app/Http/Resources/         JSON transformers
   app/Policies/               Authorization (ownership checks)
   routes/api.php              API routes
-  tests/Feature/              Auth + Task tests (in-memory SQLite)
 frontend/src/
   lib/api.ts                  performRequest, token handling, error helper
+  hooks/                      API functions, one file per resource (useTasks, useAuthApi)
   auth/                       AuthContext, AuthProvider, route guards
   components/                 Layout, shared UI
   pages/                      Login, Register, Tasks

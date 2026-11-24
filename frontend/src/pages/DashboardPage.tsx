@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { getErrorMessage, performRequest } from '../lib/api'
-import type { Paginated, Task } from '../types'
+import { getTasks } from '../hooks/useTasks'
+import { getErrorMessage } from '../lib/api'
 
 interface Stats {
   total: number
@@ -19,10 +19,10 @@ export function DashboardPage() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    performRequest<Paginated<Task>>('get', '/tasks', { per_page: 100 })
+    getTasks({ per_page: 100 })
       .then((res) => {
         const completed = res.data.filter((task) => task.completed).length
-        setStats({ total: res.meta.total, completed, open: res.meta.total - completed })
+        setStats({ total: res.total, completed, open: res.total - completed })
       })
       .catch((err) => setError(getErrorMessage(err)))
   }, [])

@@ -1,5 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react'
-import { performRequest, tokenStorage } from '../lib/api'
+import { getProfile, login as loginRequest, logout as logoutRequest, register as registerRequest } from '../hooks/useAuthApi'
+import { tokenStorage } from '../lib/api'
 import type { AuthResponse, User } from '../types'
 import { AuthContext, type RegisterData } from './AuthContext'
 
@@ -10,8 +11,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!tokenStorage.get()) return
 
-    performRequest<{ data: User }>('get', '/me')
-      .then(({ data }) => setUser(data))
+    getProfile()
+      .then(setUser)
       .catch(() => tokenStorage.clear())
       .finally(() => setLoading(false))
   }, [])
@@ -22,16 +23,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const login = async (email: string, password: string) => {
-    handleAuth(await performRequest<AuthResponse>('post', '/login', { email, password }))
+    handleAuth(await loginRequest(email, password))
   }
 
   const register = async (payload: RegisterData) => {
-    handleAuth(await performRequest<AuthResponse>('post', '/register', payload))
+    handleAuth(await registerRequest(payload))
   }
 
   const logout = async () => {
     try {
-      await performRequest('post', '/logout')
+      await logoutRequest()
     } finally {
       tokenStorage.clear()
       setUser(null)

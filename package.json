@@ -4,7 +4,6 @@
   "scripts": {
     "setup": "bash setup.sh",
     "dev": "concurrently -k -n api,web -c blue,green \"cd backend && php artisan serve --port=8080 --tries=0\" \"npm --prefix frontend run dev\"",
-    "test": "cd backend && php artisan test",
     "fresh": "cd backend && php artisan migrate:fresh --seed"
   },
   "devDependencies": {

@@ -3,8 +3,9 @@ import type { TableColumnsType } from 'antd'
 import { DataTable } from '../components/DataTable'
 import { FormDrawer } from '../components/FormDrawer'
 import { useCallback, useEffect, useState } from 'react'
-import { getErrorMessage, performRequest } from '../lib/api'
-import type { Paginated, Task } from '../types'
+import { createTask, deleteTask as removeTask, getTasks, updateTask } from '../hooks/useTasks'
+import { getErrorMessage } from '../lib/api'
+import type { Task } from '../types'
 
 export function TasksPage() {
   const [tasks, setTasks] = useState<Task[]>([])
@@ -15,10 +16,10 @@ export function TasksPage() {
 
   const loadTasks = useCallback(
     (page: number) =>
-      performRequest<Paginated<Task>>('get', '/tasks', { page })
+      getTasks({ page })
         .then((res) => {
           setTasks(res.data)
-          setMeta(res.meta)
+          setMeta(res)
         })
         .catch((err) => setError(getErrorMessage(err)))
         .finally(() => setLoading(false)),
@@ -35,16 +36,14 @@ export function TasksPage() {
   }
 
   const addTask = async (values: { title: string; description?: string }) => {
-    await performRequest('post', '/tasks', values)
+    await createTask(values)
     fetchTasks(1)
   }
 
   const toggleTask = async (task: Task) => {
     try {
-      const { data } = await performRequest<{ data: Task }>('patch', `/tasks/${task.id}`, {
-        completed: !task.completed,
-      })
-      setTasks((prev) => prev.map((t) => (t.id === task.id ? data : t)))
+      const updated = await updateTask(task.id, { completed: !task.completed })
+      setTasks((prev) => prev.map((t) => (t.id === task.id ? updated : t)))
     } catch (err) {
       setError(getErrorMessage(err))
     }
@@ -52,7 +51,7 @@ export function TasksPage() {
 
   const deleteTask = async (task: Task) => {
     try {
-      await performRequest('delete', `/tasks/${task.id}`)
+      await removeTask(task.id)
       const isLastOnPage = tasks.length === 1 && meta.current_page > 1
       fetchTasks(isLastOnPage ? meta.current_page - 1 : meta.current_page)
     } catch (err) {

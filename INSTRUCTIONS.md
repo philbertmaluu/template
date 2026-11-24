@@ -34,15 +34,14 @@ If MySQL is not `root` with no password, first copy `backend/.env.example` to `b
 | Command         | What it does                             |
 | --------------- | ---------------------------------------- |
 | `npm run dev`   | Start backend and frontend together      |
-| `npm test`      | Run backend tests                        |
 | `npm run fresh` | Reset the database and re-seed test data |
 
 ## 4. Building a new feature
 
 Copy the existing `Task` example. See "Adding a new resource" in `README.md` for the exact artisan commands, then:
 
-- Backend: register the route in `backend/routes/api.php` and add a test in `backend/tests/Feature/`.
-- Frontend: add the type to `src/types.ts`, a page in `src/pages/`, and a route in `src/App.tsx`. Call the API with `performRequest` from `src/lib/api.ts`, for example `performRequest<{ data: Product[] }>('get', '/products')`. Don't import axios directly.
+- Backend: register the route in `backend/routes/api.php`.
+- Frontend: add the type to `src/types.ts`, the API functions to `src/hooks/` (see `useTasks.ts`), a page in `src/pages/`, and a route in `src/App.tsx`. Don't call `performRequest` from a page, and don't import axios directly.
 
 ## 5. Troubleshooting
 

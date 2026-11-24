@@ -14,20 +14,13 @@ export interface Task {
   updated_at: string
 }
 
+/** Laravel's paginator JSON: the rows are in `data`, the page info sits next to it. */
 export interface Paginated<T> {
   data: T[]
-  links: {
-    first: string | null
-    last: string | null
-    prev: string | null
-    next: string | null
-  }
-  meta: {
-    current_page: number
-    last_page: number
-    per_page: number
-    total: number
-  }
+  current_page: number
+  last_page: number
+  per_page: number
+  total: number
 }
 
 export interface AuthResponse {
