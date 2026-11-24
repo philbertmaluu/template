@@ -53,7 +53,7 @@ export function TasksPage() {
 
       <form onSubmit={addTask} className="mb-6 flex gap-2">
         <input
-          className="flex-1 rounded-md border bg-white px-3 py-2 text-sm outline-none focus:border-indigo-500"
+          className="flex-1 rounded-md bg-white px-3 py-2 text-sm shadow-md outline-none transition-shadow focus:shadow-lg focus:ring-2 focus:ring-indigo-100"
           placeholder="What needs to be done?"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
@@ -70,9 +70,12 @@ export function TasksPage() {
       ) : tasks.length === 0 ? (
         <p className="text-gray-500">No tasks yet.</p>
       ) : (
-        <ul className="divide-y rounded-lg border bg-white">
+        <ul className="space-y-3">
           {tasks.map((task) => (
-            <li key={task.id} className="flex items-center gap-3 px-4 py-3">
+            <li
+              key={task.id}
+              className="flex items-center gap-3 rounded-lg bg-white px-4 py-3 shadow-md transition-shadow hover:shadow-lg"
+            >
               <input
                 type="checkbox"
                 checked={task.completed}

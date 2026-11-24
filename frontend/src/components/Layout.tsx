@@ -6,7 +6,7 @@ export function Layout() {
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900">
-      <header className="border-b bg-white">
+      <header className="bg-white shadow-md">
         <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3">
           <Link to="/" className="text-lg font-semibold">
             Interview App
@@ -15,7 +15,7 @@ export function Layout() {
             <span className="text-gray-600">{user?.name}</span>
             <button
               onClick={logout}
-              className="rounded-md border px-3 py-1.5 hover:bg-gray-100"
+              className="rounded-md bg-white px-3 py-1.5 shadow-md transition-shadow hover:shadow-lg"
             >
               Log out
             </button>
