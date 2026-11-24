@@ -50,6 +50,13 @@ export function LoginPage() {
           {submitting ? 'Logging in...' : 'Log in'}
         </button>
       </form>
+      <p className="mt-4 rounded-md bg-gray-50 px-3 py-2 text-center text-sm text-gray-600">
+        Test account
+        <br />
+        <span className="font-medium text-gray-900">test@example.com</span>
+        <span className="mx-1">/</span>
+        <span className="font-medium text-gray-900">password</span>
+      </p>
       <p className="mt-4 text-center text-sm text-gray-600">
         No account?{' '}
         <Link to="/register" className="text-indigo-600 hover:underline">
