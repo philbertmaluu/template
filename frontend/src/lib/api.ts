@@ -1,4 +1,4 @@
-import axios, { AxiosError } from 'axios'
+import axios, { type AxiosRequestConfig } from 'axios'
 
 const TOKEN_KEY = 'auth_token'
 
@@ -8,8 +8,8 @@ export const tokenStorage = {
   clear: () => localStorage.removeItem(TOKEN_KEY),
 }
 
-export const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL ?? 'http://localhost:8000/api',
+const api = axios.create({
+  baseURL: import.meta.env.VITE_API_URL ?? '/api',
   headers: { Accept: 'application/json' },
 })
 
@@ -23,8 +23,8 @@ api.interceptors.request.use((config) => {
 
 api.interceptors.response.use(
   (response) => response,
-  (error: AxiosError) => {
-    if (error.response?.status === 401) {
+  (error) => {
+    if (axios.isAxiosError(error) && error.response?.status === 401) {
       tokenStorage.clear()
       if (!['/login', '/register'].includes(window.location.pathname)) {
         window.location.href = '/login'
@@ -33,6 +33,33 @@ api.interceptors.response.use(
     return Promise.reject(error)
   },
 )
+
+export type HttpMethod = 'get' | 'post' | 'put' | 'patch' | 'delete'
+
+/**
+ * Single entry point for API calls. Returns the response body.
+ * For "get" and "delete" the payload is sent as query params; otherwise as the request body.
+ *
+ *   const tasks = await performRequest<Paginated<Task>>('get', '/tasks', { page: 2 })
+ *   const { data } = await performRequest<{ data: Task }>('post', '/tasks', { title })
+ */
+export async function performRequest<T = unknown>(
+  method: HttpMethod,
+  url: string,
+  payload?: unknown,
+  config: AxiosRequestConfig = {},
+): Promise<T> {
+  const sendsBody = method !== 'get' && method !== 'delete'
+
+  const response = await api.request<T>({
+    method,
+    url,
+    ...(sendsBody ? { data: payload } : { params: payload }),
+    ...config,
+  })
+
+  return response.data
+}
 
 /** Laravel validation errors: { message, errors: { field: [msg] } } */
 export function getErrorMessage(error: unknown): string {

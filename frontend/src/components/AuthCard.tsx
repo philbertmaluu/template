@@ -15,4 +15,4 @@ export const inputClass =
   'w-full rounded-md border px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100'
 
 export const buttonClass =
-  'w-full rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 disabled:opacity-50'
+  'w-full rounded-md bg-maroon px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 disabled:opacity-50'

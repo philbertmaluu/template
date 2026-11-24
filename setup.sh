@@ -20,5 +20,5 @@ cd "$ROOT/frontend"
 npm install
 
 echo ""
-echo "Done. Run 'npm run dev' and open http://localhost:5173"
+echo "Done. Run 'npm run dev' and open http://localhost:3000"
 echo "Login: test@example.com / password"

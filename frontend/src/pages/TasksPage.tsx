@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { api, getErrorMessage } from '../lib/api'
+import { getErrorMessage, performRequest } from '../lib/api'
 import type { Paginated, Task } from '../types'
 
 export function TasksPage() {
@@ -9,9 +9,8 @@ export function TasksPage() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    api
-      .get<Paginated<Task>>('/tasks')
-      .then(({ data }) => setTasks(data.data))
+    performRequest<Paginated<Task>>('get', '/tasks')
+      .then(({ data }) => setTasks(data))
       .catch((err) => setError(getErrorMessage(err)))
       .finally(() => setLoading(false))
   }, [])
@@ -20,8 +19,8 @@ export function TasksPage() {
     e.preventDefault()
     if (!title.trim()) return
     try {
-      const { data } = await api.post<{ data: Task }>('/tasks', { title })
-      setTasks((prev) => [data.data, ...prev])
+      const { data } = await performRequest<{ data: Task }>('post', '/tasks', { title })
+      setTasks((prev) => [data, ...prev])
       setTitle('')
     } catch (err) {
       setError(getErrorMessage(err))
@@ -30,10 +29,10 @@ export function TasksPage() {
 
   const toggleTask = async (task: Task) => {
     try {
-      const { data } = await api.patch<{ data: Task }>(`/tasks/${task.id}`, {
+      const { data } = await performRequest<{ data: Task }>('patch', `/tasks/${task.id}`, {
         completed: !task.completed,
       })
-      setTasks((prev) => prev.map((t) => (t.id === task.id ? data.data : t)))
+      setTasks((prev) => prev.map((t) => (t.id === task.id ? data : t)))
     } catch (err) {
       setError(getErrorMessage(err))
     }
@@ -41,7 +40,7 @@ export function TasksPage() {
 
   const deleteTask = async (task: Task) => {
     try {
-      await api.delete(`/tasks/${task.id}`)
+      await performRequest('delete', `/tasks/${task.id}`)
       setTasks((prev) => prev.filter((t) => t.id !== task.id))
     } catch (err) {
       setError(getErrorMessage(err))

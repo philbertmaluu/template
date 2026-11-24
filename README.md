@@ -3,8 +3,8 @@
 Starter for interview tasks: a **Laravel 13 REST API** (Sanctum token auth, MySQL) and a **React 19 + TypeScript + Vite** SPA (Tailwind v4, React Router, Axios). Auth and an example `Task` CRUD are already wired end to end, so you can copy the pattern and start building.
 
 ```
-backend/    Laravel API  -> http://localhost:8000/api
-frontend/   React SPA    -> http://localhost:5173
+backend/    Laravel API  -> http://localhost:8080/api
+frontend/   React SPA    -> http://localhost:3000
 ```
 
 ## Requirements
@@ -19,18 +19,18 @@ npm run setup     # installs everything, creates .env files, migrates + seeds My
 npm run dev       # starts API and frontend together
 ```
 
-Open http://localhost:5173 and log in with `test@example.com` / `password`.
+Open http://localhost:3000 and log in with `test@example.com` / `password`.
 
 If your MySQL credentials differ, edit `backend/.env` (`DB_*`) before running setup.
 
-Ports 8000 and 5173 are fixed: `npm run dev` fails instead of silently switching ports, because the frontend's `VITE_API_URL` and the backend's CORS `FRONTEND_URL` depend on them. Stop whatever is using those ports before starting.
+Ports 8080 (API) and 3000 (frontend) are fixed: `npm run dev` fails instead of silently switching ports. The frontend calls `/api` on its own origin, and Vite proxies those requests to `BACKEND_URL` in `frontend/.env` (default `http://127.0.0.1:8080`), so the browser never talks to another app's backend by accident.
 
 ## Scripts (run from repo root)
 
 | Command         | What it does                               |
 | --------------- | ------------------------------------------ |
 | `npm run setup` | First-time install and database setup     |
-| `npm run dev`   | Run Laravel (`:8000`) and Vite (`:5173`)   |
+| `npm run dev`   | Run Laravel (`:8080`) and Vite (`:3000`)   |
 | `npm test`      | Run backend feature tests                  |
 | `npm run fresh` | Drop all tables, re-migrate, and re-seed   |
 
@@ -48,7 +48,23 @@ Ports 8000 and 5173 are fixed: `npm run dev` fails instead of silently switching
 | PATCH     | `/api/tasks/{id}` | yes  |                                            |
 | DELETE    | `/api/tasks/{id}` | yes  |                                            |
 
-Authenticated requests send `Authorization: Bearer <token>`; the frontend's Axios client does this automatically.
+Authenticated requests send `Authorization: Bearer <token>`; `performRequest` adds it automatically.
+
+## Calling the API from React
+
+Use `performRequest` from `src/lib/api.ts` for every call. There's no need to import axios, and the token and base URL are handled for you:
+
+```ts
+import { performRequest } from '../lib/api'
+
+// performRequest<ResponseType>(method, url, payload?, axiosConfig?) -> response body
+const tasks = await performRequest<Paginated<Task>>('get', '/tasks', { page: 2 }) // GET/DELETE payload = query params
+const { data } = await performRequest<{ data: Task }>('post', '/tasks', { title: 'New' })
+await performRequest('patch', `/tasks/${id}`, { completed: true })
+await performRequest('delete', `/tasks/${id}`)
+```
+
+Errors are thrown; show them with `getErrorMessage(err)` (it returns the first Laravel validation message).
 
 ## Adding a new resource (e.g. `Product`)
 
@@ -70,7 +86,7 @@ Then register the route in `routes/api.php`: `Route::apiResource('products', Pro
 
 Use `TaskController` / `TaskTest` as a reference.
 
-Frontend: add the type in `src/types.ts`, a page in `src/pages/`, and a route in `src/App.tsx`. Call the API with `api` from `src/lib/api.ts` (use `TasksPage.tsx` as a reference).
+Frontend: add the type in `src/types.ts`, a page in `src/pages/`, and a route in `src/App.tsx`. Call the API with `performRequest` (use `TasksPage.tsx` as a reference).
 
 ## Project layout
 
@@ -83,7 +99,7 @@ backend/
   routes/api.php              API routes
   tests/Feature/              Auth + Task tests (in-memory SQLite)
 frontend/src/
-  lib/api.ts                  Axios instance, token handling, error helper
+  lib/api.ts                  performRequest, token handling, error helper
   auth/                       AuthContext, AuthProvider, route guards
   components/                 Layout, shared UI
   pages/                      Login, Register, Tasks
