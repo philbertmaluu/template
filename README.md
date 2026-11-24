@@ -1,6 +1,6 @@
 # React + Laravel Template
 
-Starter for interview tasks: a **Laravel 13 REST API** (Sanctum token auth, MySQL) and a **React 19 + TypeScript + Vite** SPA (Tailwind v4, React Router, Axios). Auth and an example `Task` CRUD are already wired end to end, so you can copy the pattern and start building.
+Starter for interview tasks: a **Laravel 13 REST API** (Sanctum token auth, MySQL) and a **React 19 + TypeScript + Vite** SPA (Ant Design, Tailwind v4, React Router). Auth and an example `Task` CRUD are already wired end to end, so you can copy the pattern and start building.
 
 ```
 backend/    Laravel API  -> http://localhost:8080/api
@@ -66,33 +66,35 @@ await performRequest('delete', `/tasks/${id}`)
 
 Errors are thrown; show them with `getErrorMessage(err)` (it returns the first Laravel validation message).
 
-## Table component
+## Tables
 
-`src/components/Table.tsx` is an antd-style table (no antd dependency):
+Use Ant Design's `Table`. `TasksPage.tsx` is the working example, including server-side pagination against Laravel's `meta`:
 
 ```tsx
-import { Table, type ColumnType } from '../components/Table'
+import { Table } from 'antd'
+import type { TableColumnsType } from 'antd'
 
-const columns: ColumnType<User>[] = [
-  { title: 'Name', dataIndex: 'name', sorter: true },
-  { title: 'Company', dataIndex: 'company.name' },                  // nested paths work
-  { title: 'Age', dataIndex: 'age', align: 'right', sorter: (a, b) => a.age - b.age },
+const columns: TableColumnsType<User> = [
+  { title: 'Name', dataIndex: 'name', sorter: (a, b) => a.name.localeCompare(b.name) },
+  { title: 'Age', dataIndex: 'age', align: 'right' },
   { title: 'Actions', key: 'actions', render: (_, record) => <button>Edit {record.name}</button> },
 ]
 
-// Client-side pagination (default 10 per page):
-<Table columns={columns} dataSource={users} rowKey="id" />
-
-// Server-side pagination with a Laravel paginated response:
 <Table
+  rowKey="id"
   columns={columns}
   dataSource={res.data}
   loading={loading}
-  pagination={{ current: res.meta.current_page, pageSize: res.meta.per_page, total: res.meta.total, onChange: (page) => load(page) }}
+  pagination={{
+    current: res.meta.current_page,
+    pageSize: res.meta.per_page,
+    total: res.meta.total,
+    onChange: (page) => load(page),
+  }}
 />
 ```
 
-Other props: `pagination={false}`, `emptyText`, `title={() => 'Users'}`, `onRow={(record) => ({ onClick: () => ... })}`, and `rowKey` as a function. `sorter` sorts the rows currently loaded in the browser.
+The primary color is set to maroon in `src/main.tsx` (`ConfigProvider`). A `sorter` function sorts the rows currently loaded; for sorting the whole dataset, handle `onChange` on the `Table` and sort in Laravel.
 
 ## Adding a new resource (e.g. `Product`)
 
