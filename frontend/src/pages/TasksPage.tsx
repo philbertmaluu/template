@@ -1,13 +1,15 @@
-import { Alert, Button, Checkbox, Input, Table } from 'antd'
+import { Alert, Button, Checkbox, Form, Input } from 'antd'
 import type { TableColumnsType } from 'antd'
-import { useCallback, useEffect, useState, type FormEvent } from 'react'
+import { DataTable } from '../components/DataTable'
+import { FormDrawer } from '../components/FormDrawer'
+import { useCallback, useEffect, useState } from 'react'
 import { getErrorMessage, performRequest } from '../lib/api'
 import type { Paginated, Task } from '../types'
 
 export function TasksPage() {
   const [tasks, setTasks] = useState<Task[]>([])
   const [meta, setMeta] = useState({ current_page: 1, per_page: 15, total: 0 })
-  const [title, setTitle] = useState('')
+  const [formOpen, setFormOpen] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -32,16 +34,9 @@ export function TasksPage() {
     loadTasks(page)
   }
 
-  const addTask = async (e: FormEvent) => {
-    e.preventDefault()
-    if (!title.trim()) return
-    try {
-      await performRequest('post', '/tasks', { title })
-      setTitle('')
-      fetchTasks(1)
-    } catch (err) {
-      setError(getErrorMessage(err))
-    }
+  const addTask = async (values: { title: string; description?: string }) => {
+    await performRequest('post', '/tasks', values)
+    fetchTasks(1)
   }
 
   const toggleTask = async (task: Task) => {
@@ -105,36 +100,43 @@ export function TasksPage() {
     <div>
       <h1 className="mb-6 text-2xl font-semibold">Tasks</h1>
 
-      <form onSubmit={addTask} className="mb-6 flex gap-2">
-        <Input
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="What needs to be done?"
-          size="large"
-        />
-        <Button type="primary" htmlType="submit" size="large">
-          Add
-        </Button>
-      </form>
-
       {error && <Alert type="error" title={error} showIcon className="mb-4" />}
 
-      <div className="overflow-hidden rounded-xl bg-white shadow-md">
-        <Table
-          rowKey="id"
-          columns={columns}
-          dataSource={tasks}
-          loading={loading}
-          locale={{ emptyText: 'No tasks yet.' }}
-          pagination={{
-            current: meta.current_page,
-            pageSize: meta.per_page,
-            total: meta.total,
-            showSizeChanger: false,
-            onChange: (page) => fetchTasks(page),
-          }}
-        />
-      </div>
+      <DataTable
+        searchPlaceholder="Search tasks"
+        extra={
+          <Button type="primary" onClick={() => setFormOpen(true)}>
+            Add
+          </Button>
+        }
+        rowKey="id"
+        columns={columns}
+        dataSource={tasks}
+        loading={loading}
+        locale={{ emptyText: 'No tasks yet.' }}
+        pagination={{
+          current: meta.current_page,
+          pageSize: meta.per_page,
+          total: meta.total,
+          showSizeChanger: false,
+          onChange: (page) => fetchTasks(page),
+        }}
+      />
+
+      <FormDrawer
+        open={formOpen}
+        title="Add task"
+        submitText="Add"
+        onClose={() => setFormOpen(false)}
+        onSubmit={addTask}
+      >
+        <Form.Item name="title" label="Title" rules={[{ required: true, message: 'Title is required' }]}>
+          <Input placeholder="What needs to be done?" />
+        </Form.Item>
+        <Form.Item name="description" label="Description">
+          <Input.TextArea rows={3} placeholder="Optional details" />
+        </Form.Item>
+      </FormDrawer>
     </div>
   )
 }

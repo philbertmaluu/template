@@ -4,6 +4,7 @@ import { GuestRoute, ProtectedRoute } from './auth/RouteGuards'
 import { Layout } from './components/Layout'
 import { LoginPage } from './pages/LoginPage'
 import { RegisterPage } from './pages/RegisterPage'
+import { DashboardPage } from './pages/DashboardPage'
 import { TasksPage } from './pages/TasksPage'
 
 export default function App() {
@@ -18,7 +19,8 @@ export default function App() {
 
           <Route element={<ProtectedRoute />}>
             <Route element={<Layout />}>
-              <Route path="/" element={<TasksPage />} />
+              <Route path="/" element={<DashboardPage />} />
+              <Route path="/tasks" element={<TasksPage />} />
             </Route>
           </Route>
 

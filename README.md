@@ -68,23 +68,25 @@ Errors are thrown; show them with `getErrorMessage(err)` (it returns the first L
 
 ## Tables
 
-Use Ant Design's `Table`. `TasksPage.tsx` is the working example, including server-side pagination against Laravel's `meta`:
+Use `DataTable` from `src/components/DataTable.tsx` for every table. It is the standard layout: one search box, optional actions at the right end, and a full-width table inside a card. `TasksPage.tsx` is the working example, including server-side pagination against Laravel's `meta`.
 
 ```tsx
-import { Table } from 'antd'
+import { DataTable } from '../components/DataTable'
 import type { TableColumnsType } from 'antd'
 
 const columns: TableColumnsType<User> = [
   { title: 'Name', dataIndex: 'name', sorter: (a, b) => a.name.localeCompare(b.name) },
   { title: 'Age', dataIndex: 'age', align: 'right' },
-  { title: 'Actions', key: 'actions', render: (_, record) => <button>Edit {record.name}</button> },
+  { title: 'Actions', key: 'actions', align: 'right', render: (_, record) => <button>Edit {record.name}</button> },
 ]
 
-<Table
+<DataTable
   rowKey="id"
   columns={columns}
   dataSource={res.data}
   loading={loading}
+  searchPlaceholder="Search users"
+  extra={<Button type="primary">Add</Button>}
   pagination={{
     current: res.meta.current_page,
     pageSize: res.meta.per_page,
@@ -94,7 +96,23 @@ const columns: TableColumnsType<User> = [
 />
 ```
 
-The primary color is set to maroon in `src/main.tsx` (`ConfigProvider`). A `sorter` function sorts the rows currently loaded; for sorting the whole dataset, handle `onChange` on the `Table` and sort in Laravel.
+Search filters the rows currently loaded. Pass `getSearchText={(row) => row.name}` to choose which text is matched. The header color is the primary maroon, set in `src/main.tsx`. A `sorter` function sorts the loaded rows; to sort the whole dataset, handle `onChange` and sort in Laravel.
+
+## Forms
+
+Open every form in `FormDrawer` from `src/components/FormDrawer.tsx`. Put antd `Form.Item` fields inside it. The drawer validates, submits, shows Laravel field errors, and closes on success. `TasksPage.tsx` is the example.
+
+```tsx
+const [open, setOpen] = useState(false)
+
+<Button type="primary" onClick={() => setOpen(true)}>Add</Button>
+
+<FormDrawer open={open} title="Add user" submitText="Save" onClose={() => setOpen(false)} onSubmit={createUser}>
+  <Form.Item name="name" label="Name" rules={[{ required: true }]}>
+    <Input />
+  </Form.Item>
+</FormDrawer>
+```
 
 ## Adding a new resource (e.g. `Product`)
 

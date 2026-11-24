@@ -16,7 +16,8 @@ class TaskController extends Controller
 {
     public function index(Request $request): AnonymousResourceCollection
     {
-        $tasks = $request->user()->tasks()->latest()->paginate(15);
+        $perPage = min(max($request->integer('per_page', 15), 1), 100);
+        $tasks = $request->user()->tasks()->latest()->paginate($perPage);
 
         return TaskResource::collection($tasks);
     }
