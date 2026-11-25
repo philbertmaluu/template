@@ -32,6 +32,7 @@ Ports 8080 (API) and 3000 (frontend) are fixed: `npm run dev` fails instead of s
 | `npm run setup` | First-time install and database setup     |
 | `npm run dev`   | Run Laravel (`:8080`) and Vite (`:3000`)   |
 | `npm run fresh` | Drop all tables, re-migrate, and re-seed   |
+| `npm run clear-git` | Delete the clone's `.git` and start a new repo with no remote |
 
 ## API
 

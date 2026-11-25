@@ -21,9 +21,12 @@ Requirements on the machine: PHP 8.3+, Composer, Node 20+, MySQL running.
 
 ```bash
 git clone <repo-url> my-app && cd my-app
-npm run setup   # installs dependencies, creates .env files, creates + migrates + seeds MySQL
-npm run dev     # API on http://localhost:8080, app on http://localhost:3000
+npm run setup      # installs dependencies, creates .env files, creates + migrates + seeds MySQL
+npm run clear-git  # deletes the clone's .git and starts a new repo with no remote
+npm run dev        # API on http://localhost:8080, app on http://localhost:3000
 ```
+
+`npm run clear-git` asks you to type `yes`. It removes history, branches, and the origin URL, then runs `git init`. It does not change source files, and it does not create a commit.
 
 Open http://localhost:3000 and log in with `test@example.com` / `password`.
 
